@@ -48,7 +48,7 @@
  *         pending: number (active and delivered === false),
  *         mealBreakdown: { veg: count, nonveg: count, jain: count }
  *       }
- *     - mealBreakdown counts active customers only
+ *     -  counts active customers only
  *
  *   getCustomer(name)
  *     - Returns customer object by name (including inactive)
@@ -76,30 +76,111 @@
  */
 export class DabbaService {
   constructor(serviceName, area) {
-    // Your code here
+    this.serviceName = serviceName;
+    this.area = area;
+    this.customers = [];
+    this._nextId = 1;
   }
 
   addCustomer(name, address, mealPreference) {
-    // Your code here
+    switch (mealPreference) {
+      case "veg":
+        break;
+      case "nonveg":
+        break;
+      case "jain":
+        break;
+      default:
+        return null;
+    }
+    for (let cst of this.customers) {
+      if (name === cst.name) {
+        return null;
+      }
+    }
+    let customer = {
+      id: this._nextId++,
+      name,
+      address,
+      mealPreference,
+      active: true,
+      delivered: false,
+    };
+    this.customers.push(customer);
+    return { ...customer };
   }
 
   removeCustomer(name) {
-    // Your code here
+    for (let cust of this.customers) {
+      if (cust.name === name) {
+        if (cust.active === false) {
+          return false;
+        }
+        cust.active = false;
+        return true;
+      }
+    }
+    return false;
   }
 
   createDeliveryBatch() {
-    // Your code here
+    const ActiveCustomers = this.customers.filter(
+      (cust) => cust.active === true
+    );
+    ActiveCustomers.forEach((act) => {
+      act.delivered = false;
+    });
+    const time = new Date().toISOString();
+    const delivery = ActiveCustomers.map((act) => {
+      return {
+        customerId: act.id,
+        name: act.name,
+        address: act.address,
+        mealPreference: act.mealPreference,
+        batchTime: time,
+      };
+    });
+    return delivery;
   }
 
   markDelivered(customerId) {
-    // Your code here
+    for (let cust of this.customers) {
+      if (cust.id === customerId) {
+        if (cust.active === true) {
+          cust.delivered = true;
+          return true;
+        } else {
+          return false;
+        }
+      }
+    }
+    return false;
   }
 
   getDailyReport() {
-    // Your code here
+    const ActiveCustomer = this.customers.filter((c) => c.active === true);
+    const totalCustomers = ActiveCustomer.length;
+    const delivered = ActiveCustomer.filter((c) => c.delivered === true).length;
+    const pending = ActiveCustomer.filter((c) => c.delivered === false).length;
+    const mealBreakdown = {
+      veg: 0,
+      nonveg: 0,
+      jain: 0,
+    };
+    for (let meal of ActiveCustomer) {
+      mealBreakdown[meal.mealPreference]++;
+    }
+    return {
+      totalCustomers,
+      delivered,
+      pending,
+      mealBreakdown,
+    };
   }
 
   getCustomer(name) {
-    // Your code here
+    const customer = this.customers.find((c) => c.name === name);
+    if (!customer) return null;
+    return customer;
   }
 }

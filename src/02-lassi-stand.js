@@ -51,10 +51,7 @@
  *
  * Rules:
  *   - LassiStand must be a constructor function (not a class)
- *   - Methods must be on prototype, NOT inside constructor
- *   - No duplicate flavors in menu (check by flavor name string)
- *   - Order ids auto-increment starting from 1
- *   - getMenu returns a copy, not the original array
+  
  *
  * @param {string} name - Lassi stand ka naam
  * @param {string} city - City jahan stand hai
@@ -72,16 +69,80 @@
  *   isLassiStand({});                       // => false
  */
 export function LassiStand(name, city) {
-  // Your code here
+  this.name = name;
+  this.city = city;
+  this.menu = [];
+  this.orders = [];
+  this._nextOrderId = 1;
 }
 
 // Add prototype methods here:
-// LassiStand.prototype.addFlavor = function(flavor, price) { ... }
-// LassiStand.prototype.takeOrder = function(customerName, flavor, quantity) { ... }
-// LassiStand.prototype.completeOrder = function(orderId) { ... }
-// LassiStand.prototype.getRevenue = function() { ... }
-// LassiStand.prototype.getMenu = function() { ... }
+LassiStand.prototype.addFlavor = function (flavor, price) {
+  if (price <= 0) {
+    return -1;
+  }
+  for (let f of this.menu) {
+    if (f.flavor === flavor) {
+      return -1;
+    }
+  }
+  this.menu.push({ flavor, price });
+  return this.menu.length;
+};
+
+LassiStand.prototype.takeOrder = function (customerName, flavor, quantity) {
+  if (quantity <= 0) {
+    return -1;
+  }
+  let item = null;
+  for (let fl of this.menu) {
+    if (fl.flavor === flavor) {
+      item = fl;
+    }
+  }
+  if (!item) return -1;
+  let total = item.price * quantity;
+  let order = {
+    id: this._nextOrderId++,
+    customer: customerName,
+    flavor,
+    quantity,
+    total,
+    status: "pending",
+  };
+  this.orders.push(order);
+  return order.id;
+};
+LassiStand.prototype.completeOrder = function (orderId) {
+  let find = false;
+  for (let ord of this.orders) {
+    if (ord.id === orderId) {
+      if (ord.status === "completed") {
+        return false;
+      }
+      ord.status = "completed";
+      find = true;
+      return true;
+    }
+  }
+  if (!find) {
+    return false;
+  }
+};
+LassiStand.prototype.getRevenue = function () {
+  let total = 0;
+  for (let ord of this.orders) {
+    if (ord.status === "completed") {
+      total = total + ord.total;
+    }
+  }
+  return total;
+};
+LassiStand.prototype.getMenu = function () {
+  const copy = structuredClone(this.menu);
+  return copy;
+};
 
 export function isLassiStand(obj) {
-  // Your code here
+  return obj instanceof LassiStand;
 }
